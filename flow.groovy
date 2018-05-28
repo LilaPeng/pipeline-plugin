@@ -1,18 +1,18 @@
 def devQAStaging() {
-    env.PATH="${tool 'Maven 3.x'}/bin:${env.PATH}"
+    env.PATH="${tool 'Maven 3.5.3'}/bin:${env.PATH}"
     stage 'Dev'
-    sh 'mvn -o clean package'
+    bat 'mvn -o clean package'
     archive 'target/x.war'
 
     stage 'QA'
 
     parallel(longerTests: {
         runWithServer {url ->
-            sh "mvn -o -f sometests/pom.xml test -Durl=${url} -Dduration=30"
+            bat "mvn -o -f sometests/pom.xml test -Durl=${url} -Dduration=30"
         }
     }, quickerTests: {
         runWithServer {url ->
-            sh "mvn -o -f sometests/pom.xml test -Durl=${url} -Dduration=20"
+            bat "mvn -o -f sometests/pom.xml test -Durl=${url} -Dduration=20"
         }
     })
     stage name: 'Staging', concurrency: 1
@@ -28,7 +28,7 @@ def production() {
     }
     stage name: 'Production', concurrency: 1
     node('master') {
-        sh 'curl -I http://localhost:8080/staging/'
+        bat 'curl -I http://localhost:8080/staging/'
         unarchive mapping: ['target/x.war' : 'x.war']
         deploy 'x.war', 'production'
         echo 'Deployed to http://localhost:8080/production/'
@@ -36,11 +36,11 @@ def production() {
 }
 
 def deploy(war, id) {
-    sh "cp ${war} /tmp/webapps/${id}.war"
+    bat "cp ${war} /tmp/webapps/${id}.war"
 }
 
 def undeploy(id) {
-    sh "rm /tmp/webapps/${id}.war"
+    bat "rm /tmp/webapps/${id}.war"
 }
 
 def runWithServer(body) {
